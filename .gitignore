@@ -1,2 +1,3 @@
 secrets.json
 .env
+generate_secret_key.py
