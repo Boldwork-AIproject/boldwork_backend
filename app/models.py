@@ -16,7 +16,9 @@ class Consultant(Base):
     __tablename__ = "consultant"
     id = Column(INTEGER, primary_key=True)
     email = Column(String(255), nullable=False)
-    hashed_password = Column(String(255), nullable=False)
+    hashedpassword = Column(String(255), nullable=False)
     name = Column(String(255), nullable=False)
     phone = Column(String(255), nullable=False)
     birthday = Column(String(255), nullable=False)
+    status = Column(String(255), nullable=False)
+    extension = Column(String(255), nullable=False)

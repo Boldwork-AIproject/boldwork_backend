@@ -4,20 +4,22 @@ from datetime import datetime
 
 class Consultant(BaseModel):
     email: EmailStr
-    hashed_password: str
+    hashedpassword: str
     name: str
     phone: str
     birthday: str
+    status: str = '대기'
+    extension: str = None
 
 class ConsultantInDB(BaseModel):
     email: EmailStr
-    hashed_password: str
+    hashedpassword: str
 
     class Config:
         schema_extra = {
             "example": {
                 "email": "example@gmail.com",
-                "hashed_password": "hashedpassword",
+                "hashedpassword": "hashedpassword",
             }
         }
 
