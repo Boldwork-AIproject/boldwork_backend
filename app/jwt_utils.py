@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()  # .env 파일을 활성화
 
 # .env 파일에서 SECRET_KEY 가져오기
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY").encode('utf-8')
 
 def create_access_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()
