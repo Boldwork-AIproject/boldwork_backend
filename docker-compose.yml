@@ -1,0 +1,28 @@
+version: '3'
+services:
+  postgres:
+    image: postgres
+    environment:
+      TZ: Asia/Seoul
+    ports:
+      - "5432:5432"
+    env_file: .env
+    restart: always
+
+  fastapi:
+    container_name: fastapi-bold
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    command: uvicorn main:app --host 0.0.0.0 --reload
+    environment:
+      - DEBUG=1
+    volumes:
+      - ./app:/app
+      - ./secrets.json:/app/secrets.json
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      - postgres
