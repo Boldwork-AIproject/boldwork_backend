@@ -22,7 +22,7 @@ def login_post(email: str, password: str):
     user = db.query(models.Consultant).filter(models.Consultant.email == email).first()
     db.close()
 
-    if user is None or user.hashed_password != password:
+    if user is None or user.hashedpassword != password:
         error_response = {
             "code": 401,
             "message": "Unauthorized",
