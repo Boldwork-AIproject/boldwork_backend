@@ -1,7 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+import os
+from fastapi import APIRouter, HTTPException, Depends, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi_login import LoginManager
 from database import SessionLocal
 from datetime import timedelta
+from dotenv import load_dotenv
+load_dotenv()  # .env 파일을 활성화
 
 from schemas import TokenResponse
 from models import Consultant
@@ -13,8 +17,18 @@ router = APIRouter(
     tags=["login"]
 )
 
+SECRET_KEY = os.getenv("SECRET_KEY")
+manager = LoginManager(SECRET_KEY, '/login', use_cookie=True)
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 hash_password = HashPassword()
+
+@manager.user_loader()
+def query_user(email: str):
+    db = SessionLocal()
+    user = db.query(Consultant).filter(Consultant.email == email).first()
+    db.close()
+    return user['email']
+
 
 # 로그인 페이지
 @router.get("/", status_code=status.HTTP_200_OK)
@@ -23,7 +37,7 @@ def login():
 
 
 @router.post("/", response_model=TokenResponse)
-def login_post(user: OAuth2PasswordRequestForm = Depends()):
+def login_post(response: Response, user: OAuth2PasswordRequestForm = Depends()):
     # DB에 등록된 이메일인지 확인
     db = SessionLocal()
     consultant_exist = db.query(Consultant).filter(Consultant.email == user.username).first()
@@ -42,6 +56,8 @@ def login_post(user: OAuth2PasswordRequestForm = Depends()):
         access_token = create_access_token(
             data={"sub": user.username}, expires_delta=access_token_expires
         )
+        # 토큰을 쿠키로 설정
+        response.set_cookie(key="access_token", value=access_token)
         return {
             "access_token": access_token,
             "token_type": "Bearer"

@@ -13,6 +13,7 @@ ecdsa==0.18.0
 email-validator==2.0.0.post2
 exceptiongroup==1.1.2
 fastapi==0.101.0
+fastapi-login==1.9.1
 greenlet==2.0.2
 h11==0.14.0
 httpcore==0.17.3
