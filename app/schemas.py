@@ -2,29 +2,40 @@ from pydantic import BaseModel
 from pydantic.networks import EmailStr
 from datetime import datetime
 
-class Consultant(BaseModel):
+class SignupData(BaseModel):
     email: EmailStr
-    hashedpassword: str
+    password: str
     name: str
     phone: str
     birthday: str
-    status: str = '대기'
-    extension: str = None
 
-class ConsultantInDB(BaseModel):
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    email: str | None = None
+
+class Customer(BaseModel):
+    consultant_email: str
     email: EmailStr
-    hashedpassword: str
+    name: str
+    phone: str
+    birthday: str
+    status: str
+    extension: str
+    disabled: bool | None = None
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "email": "example@gmail.com",
-                "hashedpassword": "hashedpassword",
-            }
-        }
+class UserInDB(Customer):
+    hashed_password: str
 
-class EmailCodeCheck(BaseModel):
-    email: EmailStr
-    code: str
-    creation_time: datetime
-    expiration_time: datetime
+class ConversationInDB(BaseModel):
+    name: str
+    phone: str
+    birthday: str
+    email: str
+    gender: str
+
+class FileForInference(BaseModel):
+    customer_id: int
+    file: str
