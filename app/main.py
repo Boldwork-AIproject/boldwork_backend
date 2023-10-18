@@ -3,10 +3,11 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from fastapi import FastAPI
 from starlette import status
 
-from app.routers import login, upload, signup
+from app.routers import login, logout, upload, signup
 
 app = FastAPI()
 app.include_router(login.router)
+app.include_router(logout.router)
 app.include_router(upload.router)
 app.include_router(signup.router)
 

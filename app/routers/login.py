@@ -1,4 +1,4 @@
-import os   #
+import os
 from fastapi import APIRouter, HTTPException, Depends, status, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_login import LoginManager
