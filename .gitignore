@@ -3,3 +3,4 @@ secrets.json
 __pycache__/
 *.pyc
 generate_secret_key.py
+audio/

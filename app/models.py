@@ -47,3 +47,15 @@ class Customer(Base):
     memo = Column(String, nullable=True)
 
     consultant = relationship("Consultant", back_populates="customer")
+
+
+class Conversation(Base):
+    __tablename__ = 'conversation'
+
+    id = Column(INTEGER, primary_key=True)
+    consultant_id = Column(INTEGER, ForeignKey("consultant.id"), nullable=False)
+    customer_id = Column(INTEGER, ForeignKey("customer.id"), nullable=False)
+    keyword = Column(String)
+    file = Column(String, nullable=False)
+    raw_text = Column(JSON)
+    summary = Column(String)
