@@ -1,14 +1,16 @@
 import os
-from fastapi import APIRouter, Depends, Request, HTTPException, File, UploadFile, Query
+import uuid
+from fastapi import APIRouter, Depends, Form, HTTPException, File, UploadFile, Query
 
 from sqlalchemy import and_
 from database import SessionLocal
 from starlette import status
-from jose import JWTError
+import librosa
+import soundfile as sf
 
 from models import Consultant, Customer, Conversation
-from schemas import UploadNewFile, SearchExistCustomer, OneExistCustomer
-from jwt_utils import verify_access_token
+from schemas import SearchExistCustomer
+from funcs.check_token import get_current_user
 
 router = APIRouter(
     prefix="/upload",
@@ -16,25 +18,15 @@ router = APIRouter(
 )
 
 # 파일 크기 제한을 300MB로 설정
-MAX_FILE_SIZE = 300 * 1024 * 1024  # 300MB
+MAX_FILE_SIZE = 300 * 1024 * 1024
 
 # 허용된 확장자 목록
 ALLOWED_EXTENSIONS = {'wav', 'mp3'}
 
-def get_current_user(request: Request):
-    try:
-        token = request.cookies.get("access_token")
-        data = verify_access_token(token)
-        return data
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid token"
-        )
-    
 # 파일 확장자를 가져오는 함수
 def get_file_extension(filename):
     return os.path.splitext(filename)[1].lower()
+
 
 # 업로드 페이지
 @router.get('', status_code=status.HTTP_200_OK)
@@ -57,23 +49,38 @@ def upload(
         return {"message": "(새로운 고객) 상담 업로드 페이지입니다."}
 
 
+# 새로운 고객 정보, 음성 파일 업로드
 @router.post('')
 async def upload_post(
-    data: UploadNewFile, 
-    # audio_file: UploadFile = File(...), # !! 오디오 파일 업로드 오류나는 중
+    name: str = Form(...),
+    phone: str = Form(...),
+    birthday: str = Form(None),
+    email: str = Form(None),
+    gender: str = Form(None),
+    audio_file: UploadFile = File(...), 
     customer: int = Query(None, description="기존 고객 id"), 
     payload = Depends(get_current_user)):
 
-    '''
-    새로운 고객: 기존에 존재하는 고객을 적었을 시 오류가 나야 함.
-    '''
-    db = SessionLocal()
+    # 현재 작업 디렉토리 가져오기
+    current_directory = os.getcwd()
 
+    # 고유한 ID 생성
+    unique_id = str(uuid.uuid4())
+    filename = f"audio_{unique_id}.{get_file_extension(audio_file.filename)}"
+    
+    # 저장할 파일의 상대 경로
+    output_file = os.path.join(current_directory, "audio", filename)
+
+    signal, _ = librosa.load(audio_file.file, sr=16000)
+    sf.write(output_file, signal, 16000)
+
+    db = SessionLocal()
+    
     # 새로운 고객일 경우
     if not customer:
 
         # 기존 고객인지 확인 (이름, 전화번호)
-        not_new_customer = db.query(Customer).filter(and_(Customer.name == data.name, Customer.phone == data.phone)).first()
+        not_new_customer = db.query(Customer).filter(and_(Customer.name == name, Customer.phone == phone)).first()
         if not_new_customer:
             db.close()
             raise HTTPException(
@@ -83,23 +90,32 @@ async def upload_post(
         
         # 새로운 고객이 맞으면 DB에 고객 정보 저장
         else:
-            consultant_id = db.query(Consultant).filter(Consultant.email == payload.sub).first().id
+            consultant_id = db.query(Consultant).filter(Consultant.email == payload['sub']).first().id
             new_customer = Customer(
                 consultant_id=consultant_id,
-                name=data.name,
-                phone=data.phone,
-                birthday=data.birthday,
-                email=data.email,
-                gender=data.gender
+                name=name,
+                phone=phone,
+                birthday=birthday,
+                email=email,
+                gender=gender
             )
             db.add(new_customer)
             db.commit()
             db.refresh(new_customer)
-            db.close()
 
-    # 기존 고객, 저장된 새로운 고객 -> 오디오 파일 DB에 저장
-    # 코드 짜야함...
-    return {"message": "File uploaded!"}
+    # 오디오 파일 경로 DB에 저장
+    customer_id = db.query(Customer).filter(and_(Customer.name == name, Customer.phone == phone)).first().id
+    new_audio_path = Conversation(
+        consultant_id=consultant_id,
+        customer_id=customer_id,
+        file=output_file
+    )
+    db.add(new_audio_path)
+    db.commit()
+    db.refresh(new_audio_path)
+    db.close()
+
+    return {"message": "File uploaded!", "audio_file_path": output_file}
 
 
 # 신규고객 or 기존고객 선택 페이지
