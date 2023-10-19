@@ -56,6 +56,6 @@ class Conversation(Base):
     consultant_id = Column(INTEGER, ForeignKey("consultant.id"), nullable=False)
     customer_id = Column(INTEGER, ForeignKey("customer.id"), nullable=False)
     keyword = Column(String)
-    file = Column(LargeBinary, nullable=False)
+    file = Column(String, nullable=False)
     raw_text = Column(JSON)
     summary = Column(String)
