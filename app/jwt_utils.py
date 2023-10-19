@@ -17,6 +17,12 @@ def create_access_token(data: dict, expires_delta: timedelta):
     
 def verify_access_token(token: str):
     try:
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No access token supplied"
+            )
+        
         data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
 
         expire = data.get("exp")
