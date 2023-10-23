@@ -5,7 +5,7 @@ from jose import JWTError
 from jwt_utils import verify_access_token
 
 
-def get_current_user(request: Request):
+def get_current_user(request: Request) -> dict:
     try:
         token = request.cookies.get("access_token")
         data = verify_access_token(token)

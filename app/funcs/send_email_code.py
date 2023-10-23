@@ -10,11 +10,11 @@ load_dotenv()  # .env 파일을 활성화
 app_password = os.getenv("GMAIL_APP_PASSWORD")
 
 # 이메일 인증코드 생성 함수
-def generate_verification_code():
+def generate_verification_code() -> str:
     return str(random.randint(100000, 999999))
 
 # 이메일 발송 함수
-def send_verification_email(email, code):
+def send_verification_email(email: str, code: str) -> None:
     subject = "Email Verification Code"
     message = f"Your verification code is: {code}"
     msg = EmailMessage()
