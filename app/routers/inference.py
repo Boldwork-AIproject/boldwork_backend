@@ -7,7 +7,7 @@ from models import Conversation
 # ---------- 임시 음성인식 ai 모델 ---------- #
 import whisper
 
-def inference_with_whisper(audio_file_path: str):
+def inference_with_whisper(audio_file_path: str) -> str:
     model = whisper.load_model("small")
     result = model.transcribe(audio_file_path)
 
@@ -22,7 +22,8 @@ router = APIRouter(
 
 @router.get("/", status_code=status.HTTP_200_OK)
 def ai_analysis_loading_page(
-    payload = Depends(get_current_user)):
+    payload: dict = Depends(get_current_user)
+    ) -> dict:
     return {"message": "AI 모델 분석 중입니다."}
 
 
@@ -30,7 +31,8 @@ def ai_analysis_loading_page(
 @router.post("/")
 def ai_analysis(
     audio_file_path: str = Form(...),
-    payload = Depends(get_current_user)):
+    payload: dict = Depends(get_current_user)
+    ) -> dict:
 
     # STT 음성 인식 결과
     result = inference_with_whisper(audio_file_path)

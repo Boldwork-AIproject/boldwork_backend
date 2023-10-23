@@ -23,7 +23,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 hash_password = HashPassword()
 
 @manager.user_loader()
-def query_user(email: str):
+def query_user(email: str) -> str:
     db = SessionLocal()
     user = db.query(Consultant).filter(Consultant.email == email).first()
     db.close()
@@ -32,12 +32,16 @@ def query_user(email: str):
 
 # 로그인 페이지
 @router.get("/", status_code=status.HTTP_200_OK)
-def login():
+def login() -> dict:
     return {"message": "로그인 페이지입니다."}
 
 
 @router.post("/", response_model=TokenResponse)
-def login_post(response: Response, user: OAuth2PasswordRequestForm = Depends()):
+def login_post(
+    response: Response, 
+    user: OAuth2PasswordRequestForm = Depends()
+    ) -> dict:
+
     # DB에 등록된 이메일인지 확인
     db = SessionLocal()
     consultant_exist = db.query(Consultant).filter(Consultant.email == user.username).first()

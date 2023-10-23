@@ -24,7 +24,7 @@ MAX_FILE_SIZE = 300 * 1024 * 1024
 ALLOWED_EXTENSIONS = {'wav', 'mp3'}
 
 # 파일 확장자를 가져오는 함수
-def get_file_extension(filename):
+def get_file_extension(filename: str) -> str:
     return os.path.splitext(filename)[1].lower()
 
 
@@ -32,7 +32,7 @@ def get_file_extension(filename):
 @router.get('', status_code=status.HTTP_200_OK)
 def upload(
     customer: int = Query(None, description="기존 고객 id"), 
-    payload = Depends(get_current_user)):
+    payload: dict = Depends(get_current_user)) -> dict:
 
     # (기존 고객) 상담 업로드 페이지
     if customer:
@@ -59,7 +59,8 @@ async def upload_post(
     gender: str = Form(None),
     audio_file: UploadFile = File(...), 
     customer: int = Query(None, description="기존 고객 id"), 
-    payload = Depends(get_current_user)):
+    payload: dict = Depends(get_current_user)
+) -> dict:
 
     # 현재 작업 디렉토리 가져오기
     current_directory = os.getcwd()
@@ -120,7 +121,7 @@ async def upload_post(
 
 # 신규고객 or 기존고객 선택 페이지
 @router.get('/customer', status_code=status.HTTP_200_OK)
-def customer_choice(payload = Depends(get_current_user)):   # payload의 형식 : {'sub': 'user1@example.com', 'exp': 1697530595}
+def customer_choice(payload: dict = Depends(get_current_user)) -> dict:   # payload의 형식 : {'sub': 'user1@example.com', 'exp': 1697530595}
     return {"message": "업로드 > 신규고객|기존고객 선택 페이지"}
 
 
@@ -130,7 +131,8 @@ def search_customer_page(
     name: str = Query(None, description="고객이름", min_length=1), 
     phone: str = Query(None, description="전화번호", max_length=11), 
     selected: int = Query(None, description="선택된 고객"), 
-    payload = Depends(get_current_user)):
+    payload: dict = Depends(get_current_user)
+    ) -> dict:
 
     if selected:
         return {"message": "기존 고객 선택 완료", "customer_id": selected}
@@ -181,7 +183,8 @@ def existing_customer_post(
     name: str = Query(None, description="고객이름", min_length=1),
     phone: str = Query(None, description="전화번호", max_length=11),
     selected: int = Query(None, description="선택된 고객"),
-    payload = Depends(get_current_user)):
+    payload: dict = Depends(get_current_user)
+    ) -> dict:
 
     # 고객 리스트에서 고객 선택한 경우 -> 고객 id를 다음 페이지(GET /upload)로 전송
     if selected:

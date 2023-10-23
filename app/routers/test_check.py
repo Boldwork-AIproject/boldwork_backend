@@ -12,7 +12,8 @@ router = APIRouter(
 @router.get("/", status_code=status.HTTP_200_OK)
 def ai_analysis_loading_page(
     conversation_id: int,
-    payload = Depends(get_current_user)):
+    payload: dict = Depends(get_current_user)
+    ) -> dict:
     db = SessionLocal()
     conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
     raw_text = conversation.raw_text
