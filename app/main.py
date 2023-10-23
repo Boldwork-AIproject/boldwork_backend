@@ -3,13 +3,15 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from fastapi import FastAPI
 from starlette import status
 
-from app.routers import login, logout, upload, signup
+from app.routers import login, logout, upload, signup, inference, test_check
 
 app = FastAPI()
 app.include_router(login.router)
 app.include_router(logout.router)
 app.include_router(upload.router)
 app.include_router(signup.router)
+app.include_router(inference.router)
+app.include_router(test_check.router)
 
 # 메인페이지
 @app.get("/", status_code=status.HTTP_200_OK)
