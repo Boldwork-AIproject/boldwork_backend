@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from database import SessionLocal
 from datetime import datetime, timedelta
+from typing import Dict
 
 from schemas import SignupData
 from models import Consultant, EmailCodeCheck
@@ -16,13 +17,13 @@ router = APIRouter(
 
 # 회원가입 페이지
 @router.get("/", status_code=status.HTTP_200_OK)
-def signup() -> dict:
+def signup() -> Dict[str, str]:
     return {"message": "회원가입 페이지입니다."}
 
 
 # 이메일 인증 요청
 @router.post("/request-verification")
-def request_verification(email: str) -> dict:
+def request_verification(email: str) -> Dict[str, str]:
     # DB에 등록된 이메일인지 확인
     db = SessionLocal()
     email_exist = db.query(Consultant).filter(Consultant.email == email).first()
@@ -59,7 +60,7 @@ def request_verification(email: str) -> dict:
 
 # 이메일 인증
 @router.post("/verify")
-def verify_email(email: str, code: str) -> dict:
+def verify_email(email: str, code: str) -> Dict[str, str]:
     db = SessionLocal()
     temp_user = db.query(EmailCodeCheck).filter(EmailCodeCheck.email == email).first()
 
@@ -87,7 +88,7 @@ def verify_email(email: str, code: str) -> dict:
 
 
 @router.post("/")
-def signup_post(data: SignupData) -> dict:
+def signup_post(data: SignupData) -> Dict[str, str]:
     db = SessionLocal()
     temp_user = db.query(EmailCodeCheck).filter(EmailCodeCheck.email == data.email).first()
     if temp_user is None or not temp_user.is_verified:
@@ -113,5 +114,5 @@ def signup_post(data: SignupData) -> dict:
 
 # 회원가입 완료 페이지
 @router.get("/complete", status_code=status.HTTP_200_OK)
-def signup() -> dict:
+def signup() -> Dict[str, str]:
     return {"message": "회원가입 완료 페이지입니다."}

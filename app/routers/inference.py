@@ -1,5 +1,7 @@
+from datetime import timedelta
 from fastapi import APIRouter, HTTPException, status, Depends, Form
 from database import SessionLocal
+from typing import Dict, Union
 
 from funcs.check_token import get_current_user
 from models import Conversation
@@ -22,8 +24,8 @@ router = APIRouter(
 
 @router.get("/", status_code=status.HTTP_200_OK)
 def ai_analysis_loading_page(
-    payload: dict = Depends(get_current_user)
-    ) -> dict:
+    payload: Dict[str, Union[str, timedelta]] = Depends(get_current_user)
+    ) -> Dict[str, str]:
     return {"message": "AI 모델 분석 중입니다."}
 
 
@@ -31,8 +33,8 @@ def ai_analysis_loading_page(
 @router.post("/")
 def ai_analysis(
     audio_file_path: str = Form(...),
-    payload: dict = Depends(get_current_user)
-    ) -> dict:
+    payload: Dict[str, Union[str, timedelta]] = Depends(get_current_user)
+    ) -> Dict[str, Union[str, int]]:
 
     # STT 음성 인식 결과
     result = inference_with_whisper(audio_file_path)
