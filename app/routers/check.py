@@ -3,7 +3,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 
 from app.models import Consultation, User, Conversation
-
+from typing import List, int
 router = APIRouter()
 
 # `user` 매개변수는 `User` 타입입니다.
@@ -16,7 +16,7 @@ async def get_consultations(
     """상담사 상담 리스트"""
 
     # 상담사 상담 목록 조회
-    consultations = await Consultation.filter(
+    consultations: List[Consultation] = await Consultation.filter(
         author=user,  # `user` 매개변수는 `User` 타입입니다.
         status="open",
     ).paginate(page=page, per_page=size)
@@ -29,7 +29,7 @@ async def get_consultations(
         "size": consultations.per_page,  # `size` 매개변수는 `int` 타입입니다.
         "totalPage": consultations.pages,
         "totalCount": consultations.total,
-        "data": consultations.items,  # `items` 속성은 `list` 타입입니다.
+        "data": consultations,  # `items` 속성은 `list` 타입입니다.
     })
 
 # `conversation_id` 매개변수는 `int` 타입입니다.
@@ -41,7 +41,7 @@ async def get_conversation(
     """상담 1개에 대한 AI상담내용"""
 
     # 상담 조회
-    conversation = await Conversation.get(conversation_id)  # `conversation_id` 매개변수는 `int` 타입입니다.
+    conversation: Conversation = await Conversation.get(conversation_id)  # `conversation_id` 매개변수는 `int` 타입입니다.
 
     # 상담이 존재하지 않으면 오류
     if not conversation:
