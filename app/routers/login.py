@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_login import LoginManager
 from database import SessionLocal
 from datetime import timedelta
+from typing import Dict
 from dotenv import load_dotenv
 load_dotenv()  # .env 파일을 활성화
 
@@ -32,7 +33,7 @@ def query_user(email: str) -> str:
 
 # 로그인 페이지
 @router.get("/", status_code=status.HTTP_200_OK)
-def login() -> dict:
+def login() -> Dict[str, str]:
     return {"message": "로그인 페이지입니다."}
 
 
@@ -40,7 +41,7 @@ def login() -> dict:
 def login_post(
     response: Response, 
     user: OAuth2PasswordRequestForm = Depends()
-    ) -> dict:
+    ) -> Dict[str, str]:
 
     # DB에 등록된 이메일인지 확인
     db = SessionLocal()

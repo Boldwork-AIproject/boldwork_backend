@@ -1,6 +1,9 @@
+from datetime import datetime
 import os
 import uuid
 from fastapi import APIRouter, Depends, Form, HTTPException, File, UploadFile, Query
+from datetime import timedelta
+from typing import Dict, List, Union
 
 from sqlalchemy import and_
 from database import SessionLocal
@@ -32,7 +35,8 @@ def get_file_extension(filename: str) -> str:
 @router.get('', status_code=status.HTTP_200_OK)
 def upload(
     customer: int = Query(None, description="기존 고객 id"), 
-    payload: dict = Depends(get_current_user)) -> dict:
+    payload: Dict[str, Union[str, timedelta]] = Depends(get_current_user)
+    ) -> Dict[str, Union[str, Dict[str, str]]]:
 
     # (기존 고객) 상담 업로드 페이지
     if customer:
@@ -59,8 +63,8 @@ async def upload_post(
     gender: str = Form(None),
     audio_file: UploadFile = File(...), 
     customer: int = Query(None, description="기존 고객 id"), 
-    payload: dict = Depends(get_current_user)
-) -> dict:
+    payload: Dict[str, Union[str, timedelta]] = Depends(get_current_user)
+    ) -> Dict[str, str]:
 
     # 현재 작업 디렉토리 가져오기
     current_directory = os.getcwd()
@@ -76,6 +80,7 @@ async def upload_post(
     sf.write(output_file, signal, 16000)
 
     db = SessionLocal()
+    consultant_id = db.query(Consultant).filter(Consultant.email == payload['sub']).first().id
     
     # 새로운 고객일 경우
     if not customer:
@@ -91,7 +96,6 @@ async def upload_post(
         
         # 새로운 고객이 맞으면 DB에 고객 정보 저장
         else:
-            consultant_id = db.query(Consultant).filter(Consultant.email == payload['sub']).first().id
             new_customer = Customer(
                 consultant_id=consultant_id,
                 name=name,
@@ -103,13 +107,16 @@ async def upload_post(
             db.add(new_customer)
             db.commit()
             db.refresh(new_customer)
+            customer_id = db.query(Customer).filter(and_(Customer.name == name, Customer.phone == phone)).first().id
+    else:
+        customer_id = customer
 
-    # 오디오 파일 경로 DB에 저장
-    customer_id = db.query(Customer).filter(and_(Customer.name == name, Customer.phone == phone)).first().id
+    # 오디오 파일 경로 DB에 저장    
     new_audio_path = Conversation(
         consultant_id=consultant_id,
         customer_id=customer_id,
-        file=output_file
+        file=output_file,
+        creation_time=datetime.utcnow()#datetime.now()
     )
     db.add(new_audio_path)
     db.commit()
@@ -121,7 +128,9 @@ async def upload_post(
 
 # 신규고객 or 기존고객 선택 페이지
 @router.get('/customer', status_code=status.HTTP_200_OK)
-def customer_choice(payload: dict = Depends(get_current_user)) -> dict:   # payload의 형식 : {'sub': 'user1@example.com', 'exp': 1697530595}
+def customer_choice(
+    payload: Dict[str, Union[str, timedelta]] = Depends(get_current_user)
+    ) -> Dict[str, str]:   # payload의 형식 : {'sub': 'user1@example.com', 'exp': 1697530595}
     return {"message": "업로드 > 신규고객|기존고객 선택 페이지"}
 
 
@@ -131,8 +140,8 @@ def search_customer_page(
     name: str = Query(None, description="고객이름", min_length=1), 
     phone: str = Query(None, description="전화번호", max_length=11), 
     selected: int = Query(None, description="선택된 고객"), 
-    payload: dict = Depends(get_current_user)
-    ) -> dict:
+    payload: Dict[str, Union[str, timedelta]] = Depends(get_current_user)
+    ) -> Dict[str, Union[str, int, List[Dict[str, Union[int, str]]]]]:
 
     if selected:
         return {"message": "기존 고객 선택 완료", "customer_id": selected}
@@ -183,8 +192,8 @@ def existing_customer_post(
     name: str = Query(None, description="고객이름", min_length=1),
     phone: str = Query(None, description="전화번호", max_length=11),
     selected: int = Query(None, description="선택된 고객"),
-    payload: dict = Depends(get_current_user)
-    ) -> dict:
+    payload: Dict[str, Union[str, timedelta]] = Depends(get_current_user)
+    ) -> Dict[str, Union[str, int]]:
 
     # 고객 리스트에서 고객 선택한 경우 -> 고객 id를 다음 페이지(GET /upload)로 전송
     if selected:

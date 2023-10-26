@@ -1,4 +1,5 @@
 import os
+from typing import Dict
 from fastapi import HTTPException, status
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
@@ -8,14 +9,14 @@ load_dotenv()  # .env 파일을 활성화
 # .env 파일에서 SECRET_KEY 가져오기
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-def create_access_token(data: dict, expires_delta: timedelta) -> str:
+def create_access_token(data: Dict[str, str], expires_delta: timedelta) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm="HS256")
     return encoded_jwt
     
-def verify_access_token(token: str) -> dict:
+def verify_access_token(token: str) -> Dict[str, timedelta]:
     try:
         if not token:
             raise HTTPException(

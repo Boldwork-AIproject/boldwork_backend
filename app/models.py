@@ -38,7 +38,7 @@ class Customer(Base):
     __tablename__ = 'customer'
 
     id = Column(INTEGER, primary_key=True)
-    consultant_id = Column(INTEGER, ForeignKey("consultant.id"))
+    consultant_id = Column(INTEGER, ForeignKey("consultant.id"), nullable=False)
     name = Column(String, nullable=False)
     phone = Column(String, nullable=False)
     birthday = Column(String, nullable=True)
@@ -59,3 +59,4 @@ class Conversation(Base):
     file = Column(String, nullable=False)
     raw_text = Column(JSON)
     summary = Column(String)
+    creation_time = Column(TIMESTAMP, nullable=False)
