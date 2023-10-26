@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import uuid
 from fastapi import APIRouter, Depends, Form, HTTPException, File, UploadFile, Query
@@ -79,6 +80,7 @@ async def upload_post(
     sf.write(output_file, signal, 16000)
 
     db = SessionLocal()
+    consultant_id = db.query(Consultant).filter(Consultant.email == payload['sub']).first().id
     
     # 새로운 고객일 경우
     if not customer:
@@ -94,7 +96,6 @@ async def upload_post(
         
         # 새로운 고객이 맞으면 DB에 고객 정보 저장
         else:
-            consultant_id = db.query(Consultant).filter(Consultant.email == payload['sub']).first().id
             new_customer = Customer(
                 consultant_id=consultant_id,
                 name=name,
@@ -106,13 +107,16 @@ async def upload_post(
             db.add(new_customer)
             db.commit()
             db.refresh(new_customer)
+            customer_id = db.query(Customer).filter(and_(Customer.name == name, Customer.phone == phone)).first().id
+    else:
+        customer_id = customer
 
-    # 오디오 파일 경로 DB에 저장
-    customer_id = db.query(Customer).filter(and_(Customer.name == name, Customer.phone == phone)).first().id
+    # 오디오 파일 경로 DB에 저장    
     new_audio_path = Conversation(
         consultant_id=consultant_id,
         customer_id=customer_id,
-        file=output_file
+        file=output_file,
+        creation_time=datetime.utcnow()#datetime.now()
     )
     db.add(new_audio_path)
     db.commit()
