@@ -36,6 +36,7 @@ CREATE TABLE conversation (
     customer_id INTEGER REFERENCES customer(id) NOT NULL,
     keyword VARCHAR(255),
     file VARCHAR(255) NOT NULL,
+    creation_time TIMESTAMP NOT NULL,
     raw_text JSON,
     summary VARCHAR(255)
 );
