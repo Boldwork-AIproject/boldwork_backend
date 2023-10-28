@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 import uuid
+from pydub import AudioSegment
 from fastapi import APIRouter, Depends, Form, HTTPException, File, UploadFile, Query
 from datetime import timedelta
 from typing import Dict, List, Union
@@ -22,9 +23,6 @@ router = APIRouter(
 
 # 파일 크기 제한을 300MB로 설정
 MAX_FILE_SIZE = 300 * 1024 * 1024
-
-# 허용된 확장자 목록
-ALLOWED_EXTENSIONS = {'wav', 'mp3'}
 
 # 파일 확장자를 가져오는 함수
 def get_file_extension(filename: str) -> str:
@@ -71,13 +69,31 @@ async def upload_post(
 
     # 고유한 ID 생성
     unique_id = str(uuid.uuid4())
-    filename = f"audio_{unique_id}.{get_file_extension(audio_file.filename)}"
+    filename = f"audio_{unique_id}{get_file_extension(audio_file.filename)}"
     
-    # 저장할 파일의 상대 경로
-    output_file = os.path.join(current_directory, "audio", filename)
+    if audio_file.filename[-3:] == 'wav' or audio_file.filename[-3:] == 'mp3':
+        # 저장할 파일의 상대 경로
+        output_file = os.path.join(current_directory, "audio", filename)
 
-    signal, _ = librosa.load(audio_file.file, sr=16000)
-    sf.write(output_file, signal, 16000)
+        signal, _ = librosa.load(audio_file.file, sr=16000)
+        sf.write(output_file, signal, 16000)
+
+        if audio_file.filename[-3:] == 'mp3':
+            # WAV 파일로 변환할 경로
+            wav_output_file = f"{output_file[:-4]}.wav"
+
+            # MP3 파일을 로드
+            audio = AudioSegment.from_mp3(output_file)
+
+            # WAV 파일로 저장
+            audio.export(wav_output_file, format="wav")
+            os.remove(output_file)
+            output_file = wav_output_file
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='mp3 또는 wav 형식의 파일이어야 합니다.'
+        )
 
     db = SessionLocal()
     consultant_id = db.query(Consultant).filter(Consultant.email == payload['sub']).first().id
@@ -116,7 +132,7 @@ async def upload_post(
         consultant_id=consultant_id,
         customer_id=customer_id,
         file=output_file,
-        creation_time=datetime.utcnow()#datetime.now()
+        creation_time=datetime.utcnow()
     )
     db.add(new_audio_path)
     db.commit()
