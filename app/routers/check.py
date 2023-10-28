@@ -114,7 +114,7 @@ def one_conversation(
     db = SessionLocal()
     result = db.query(
         Conversation.file,
-        Conversation.raw_text["messages"],
+        Conversation.raw_text["message"],
         Conversation.summary,
         Consultant.name.label('consultant_name'),
         Customer.name.label('customer_name'),

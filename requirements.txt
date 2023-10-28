@@ -53,3 +53,9 @@ psycopg2-binary==2.9.9
 soundfile==0.12.1
 numpy==1.26.1
 librosa==0.10.1
+triton==2.1.0
+torch==2.1.0
+cohere==4.32
+tiktoken==0.5.1
+openai==0.28.1
+pydub==0.25.1

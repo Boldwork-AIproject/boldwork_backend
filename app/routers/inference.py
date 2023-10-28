@@ -4,17 +4,9 @@ from database import SessionLocal
 from typing import Dict, Union
 
 from funcs.check_token import get_current_user
+from funcs.speaker_diarization import process_audio
 from models import Conversation
 
-# ---------- 임시 음성인식 ai 모델 ---------- #
-import whisper
-
-def inference_with_whisper(audio_file_path: str) -> str:
-    model = whisper.load_model("small")
-    result = model.transcribe(audio_file_path)
-
-    return result["text"]
-# ------------------------------------------ #
 
 router = APIRouter(
     prefix="/inference",
@@ -37,14 +29,21 @@ def ai_analysis(
     ) -> Dict[str, Union[str, int]]:
 
     # STT 음성 인식 결과
-    result = inference_with_whisper(audio_file_path)
-    # !! 화자 분리 및 감정 분석 과정도 필요함.
+    raw_text = ''
+    data_list = process_audio(audio_file_path)
+    for data in data_list:
+      raw_text += data['text']
+    result = {}
+    result['raw_text'] = raw_text   # 통 대화 내용
+    result['message'] = data_list   # 화자 분리한 대화 내용
+    # !! 감정 분석 과정도 필요함.
 
     db = SessionLocal()
     conversation = db.query(Conversation).filter(Conversation.file == audio_file_path).first()
     conversation_id = conversation.id
     if conversation:
-        conversation.raw_text = {"raw": result}
+        # conversation.raw_text = {"raw": result}
+        conversation.raw_text = result
         db.commit()
         db.refresh(conversation)
         db.close()
