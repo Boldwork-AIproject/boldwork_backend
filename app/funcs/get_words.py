@@ -29,7 +29,6 @@ class GetWords:
 
   # 욕설 빈도 백분율 구하기
   def get_badword_percentage(self) -> float:
-
     # 욕설 개수 세기
     bad_cnt = 0
     for i in self.input_noun:
