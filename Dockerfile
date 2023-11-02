@@ -6,10 +6,13 @@ RUN apt update
 
 # 필요한 패키지 설치
 RUN apt install python3.10 python3-pip -y
+RUN apt-get update && apt-get install -y openjdk-11-jre
 RUN apt-get install -y ffmpeg
 RUN apt-get install pkg-config
 RUN apt-get install libmysqlclient-dev -y
 RUN apt-get install git -y
+
+ENV JAVA_HOME /usr/lib/jvm/java-11-openjdk-amd64
 
 # 작업 디렉토리 생성
 WORKDIR /app
