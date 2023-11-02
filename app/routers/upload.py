@@ -85,7 +85,7 @@ async def upload_post(
             # MP3 파일을 로드
             audio = AudioSegment.from_mp3(output_file)
 
-            # WAV 파일로 저장
+            # WAV 파일로 저장, MP3 파일 삭제
             audio.export(wav_output_file, format="wav")
             os.remove(output_file)
             output_file = wav_output_file
