@@ -52,15 +52,15 @@ def ai_analysis(
         }
 
     # summarization
-    summary = summarize(result['message'])
+    summary = summarize(raw_text)
     
     get_words = GetWords(raw_text)
     # 비속어 빈도
-    result['badwords'] = get_words.get_badword_percentage(raw_text)
+    result['badwords'] = get_words.get_badword_percentage()
     # 등장 키워드 및 빈도
-    result['keywords'] = get_words.get_keywords(raw_text)
+    result['keywords'] = get_words.get_keywords()
     # 필터링 키워드
-    filter_keyword = get_words.get_filter_keywords(raw_text)
+    filter_keyword = get_words.get_filter_keywords()
 
     # DB 저장
     db = SessionLocal()
