@@ -11,16 +11,13 @@ import contextlib
 from sklearn.cluster import AgglomerativeClustering
 import numpy as np
 
+num_speakers = 2
+language = 'any'
+model_size = 'small' # large로 바꾸기
+embedding_model = PretrainedSpeakerEmbedding("speechbrain/spkrec-ecapa-voxceleb", device=torch.device("cpu")) # gpu로 바꾸기
+model = whisper.load_model(model_size)
 
 def process_audio(path):
-    num_speakers = 2
-    language = 'any'
-    model_size = 'small'
-
-    embedding_model = PretrainedSpeakerEmbedding("speechbrain/spkrec-ecapa-voxceleb", device=torch.device("cpu")) # gpu로 바꾸기
-
-    model = whisper.load_model(model_size)
-
     result = model.transcribe(path)
     segments = result["segments"]
 
