@@ -59,3 +59,5 @@ cohere==4.32
 tiktoken==0.5.1
 openai==0.28.1
 pydub==0.25.1
+transformers==4.34.1
+nltk==3.8.1
