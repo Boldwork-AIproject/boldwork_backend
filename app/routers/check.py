@@ -115,6 +115,9 @@ def one_conversation(
     result = db.query(
         Conversation.file,
         Conversation.raw_text["message"],
+        Conversation.raw_text["badwords"],
+        Conversation.raw_text["keywords"],
+        Conversation.raw_text["sentiment"],
         Conversation.summary,
         Consultant.name.label('consultant_name'),
         Customer.name.label('customer_name'),
@@ -132,8 +135,11 @@ def one_conversation(
     data = {
         'audio_file': result[0],
         'messages': result[1],
-        'summary': result[2],
-        'consultant_name': result[3],
-        'customer_name': result[4]}
+        'badwords': result[2],
+        'keywords': result[3],
+        'sentiment': result[4],
+        'summary': result[5],
+        'consultant_name': result[6],
+        'customer_name': result[7]}
 
     return {"message": "상담 상세 페이지입니다.", "data": data}
