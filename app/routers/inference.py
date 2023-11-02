@@ -5,6 +5,9 @@ from typing import Dict, Union
 
 from funcs.check_token import get_current_user
 from funcs.speaker_diarization import process_audio
+from funcs.summarization import summarize
+from funcs.get_words import GetWords
+from funcs.get_sentiment import speaker_seperation, get_sentiment_score
 from models import Conversation
 
 
@@ -31,19 +34,42 @@ def ai_analysis(
     # STT 음성 인식 결과
     raw_text = ''
     data_list = process_audio(audio_file_path)
-    for data in data_list:
-      raw_text += data['text']
+    
+    # 발화 분리
+    raw_text, speaker1_text, speaker2_text = speaker_seperation(data_list)
+
     result = {}
     result['raw_text'] = raw_text   # 통 대화 내용
     result['message'] = data_list   # 화자 분리한 대화 내용
-    # !! 감정 분석 과정도 필요함.
 
+    # 감정 점수
+    speaker1_score, speaker2_score, sentiment_score, conversation_sentiment = get_sentiment_score(speaker1_text, speaker2_text)
+    result['sentiment'] = {
+        'speaker1_score': speaker1_score,
+        'speaker2_score': speaker2_score,
+        'sentiment_score': sentiment_score,
+        'conversation_sentiment': conversation_sentiment
+        }
+
+    # summarization
+    summary = summarize(result['message'])
+    
+    get_words = GetWords(raw_text)
+    # 비속어 빈도
+    result['badwords'] = get_words.get_badword_percentage(raw_text)
+    # 등장 키워드 및 빈도
+    result['keywords'] = get_words.get_keywords(raw_text)
+    # 필터링 키워드
+    filter_keyword = get_words.get_filter_keywords(raw_text)
+
+    # DB 저장
     db = SessionLocal()
     conversation = db.query(Conversation).filter(Conversation.file == audio_file_path).first()
     conversation_id = conversation.id
     if conversation:
-        # conversation.raw_text = {"raw": result}
         conversation.raw_text = result
+        conversation.summary = summary
+        conversation.keyword = filter_keyword
         db.commit()
         db.refresh(conversation)
         db.close()
