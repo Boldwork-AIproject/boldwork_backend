@@ -121,6 +121,7 @@ def one_conversation(
         Conversation.summary,
         Consultant.name.label('consultant_name'),
         Customer.name.label('customer_name'),
+        Conversation.customer_id
     ).join(
         Consultant,
         Conversation.consultant_id == Consultant.id
@@ -130,13 +131,43 @@ def one_conversation(
     ).filter(
         Conversation.id == conversation_id
     ).first()
+
+
+    # 이전 상담 대비 키워드 증감률
+    keyword_growth_rate = []
+    lately_keyword = db.query(Conversation.raw_text["keywords"]).filter(Conversation.customer_id == result[-1]).order_by(desc(Conversation.id)).all()
+    # 이전 상담이 있을 경우
+    if len(lately_keyword) > 1:
+        lately_keyword = lately_keyword[1]
+        for keyword, frequency in result[3][:10]:
+            # 해당 키워드가 이전 상담에 있을 경우
+            flag = False
+            for k in lately_keyword[0]:
+                if keyword == k[0]:
+                    keyword_growth_rate.append([int(round(frequency / k[1] * 100, 0))])
+                    flag = True
+                    break
+            
+            # 해당 키워드가 이전 상담에 없을 경우
+            if not flag:
+                keyword_growth_rate.append(100)
+
+    # 이전 상담이 없을 경우
+    else:
+        keyword_growth_rate = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
+    
+    # keywords: [키워드, 빈도, 증감률]
+    keywords = []
+    for k in zip(result[3][:10], keyword_growth_rate):
+        keywords.append([k[0][0], k[0][1], k[1]])
+
     db.close()
 
     data = {
         'audio_file': result[0],
         'messages': result[1],
         'badwords': result[2],
-        'keywords': result[3],
+        'keywords': keywords,
         'sentiment': result[4],
         'summary': result[5],
         'consultant_name': result[6],
