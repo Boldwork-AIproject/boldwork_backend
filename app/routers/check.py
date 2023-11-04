@@ -118,6 +118,7 @@ def one_conversation(
         Conversation.raw_text["badwords"],
         Conversation.raw_text["keywords"],
         Conversation.raw_text["sentiment"],
+        Conversation.raw_text["favorable_tone_score"],
         Conversation.summary,
         Consultant.name.label('consultant_name'),
         Customer.name.label('customer_name'),
@@ -180,9 +181,10 @@ def one_conversation(
         'badwords': result[2],
         'keywords': keywords,
         'sentiment': result[4],
-        'summary': result[5],
-        'consultant_name': result[6],
-        'customer_name': result[7],
+        'favorable_tone_score': result[5],
+        'summary': result[6],
+        'consultant_name': result[7],
+        'customer_name': result[8],
         'previous_sentiment': previous_sentiment}
 
     return {"message": "상담 상세 페이지입니다.", "data": data}
