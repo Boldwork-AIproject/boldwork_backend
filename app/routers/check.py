@@ -1,8 +1,9 @@
+import datetime
 from fastapi import APIRouter, HTTPException, Query, status, Depends
 from sqlalchemy import and_, or_, asc, desc
 from database import SessionLocal
 from datetime import timedelta
-from typing import List, Dict, Union, Any
+from typing import List, Dict, Set, Union, Any
 
 from funcs.check_token import get_current_user
 from models import Conversation, Consultant, Customer
@@ -108,9 +109,8 @@ def conversation_page(
 def one_conversation(
     conversation_id: int, 
     payload: Dict[str, Union[str, timedelta]] = Depends(get_current_user)
-    ) -> Dict[str, Union[str, Dict[str, Any]]]:
+    ) -> Dict[str, Union[str, Union[Dict[str, Any], List[Dict[str, Any]]]]]:
 
-    # !! keyword_analysis, sentiment_analysis 추가해야함.
     db = SessionLocal()
     result = db.query(
         Conversation.file,
@@ -161,6 +161,17 @@ def one_conversation(
     for k in zip(result[3][:10], keyword_growth_rate):
         keywords.append([k[0][0], k[0][1], k[1]])
 
+
+    # 해당 고객의 이전 상담 감성 점수
+    lately_conversation = db.query(Conversation.consultant_id, Conversation.creation_time, Conversation.raw_text).order_by(desc(Conversation.id)).all()[1:5]
+    previous_sentiment = []
+    for l in lately_conversation:
+        temp = {}
+        temp["previous_consultant"] = db.query(Consultant.name).filter(Consultant.id == l["consultant_id"]).first()[0]
+        temp["creation_time"] = l["creation_time"]
+        temp["conversation_sentiment"] = l["raw_text"]["sentiment"]["conversation_sentiment"]
+        temp["sentiment_score"] = l["raw_text"]["sentiment"]["sentiment_score"]
+        previous_sentiment.append(temp)
     db.close()
 
     data = {
@@ -171,6 +182,7 @@ def one_conversation(
         'sentiment': result[4],
         'summary': result[5],
         'consultant_name': result[6],
-        'customer_name': result[7]}
+        'customer_name': result[7],
+        'previous_sentiment': previous_sentiment}
 
     return {"message": "상담 상세 페이지입니다.", "data": data}
