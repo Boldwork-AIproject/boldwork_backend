@@ -8,6 +8,7 @@ from funcs.speaker_diarization import process_audio
 from funcs.summarization import summarize
 from funcs.get_words import GetWords
 from funcs.get_sentiment import speaker_seperation, get_sentiment_score
+from funcs.get_favorable_tone import favorable_tone
 from models import Conversation
 
 
@@ -59,6 +60,8 @@ def ai_analysis(
     result['badwords'] = get_words.get_badword_percentage()
     # 등장 키워드 및 빈도
     result['keywords'] = get_words.get_keywords()
+    # 호의적인 태도 점수(백분율 0-1 사이)
+    result['favorable_tone_score'] = favorable_tone(audio_file_path)
     # 필터링 키워드
     filter_keyword = get_words.get_filter_keywords()
 
