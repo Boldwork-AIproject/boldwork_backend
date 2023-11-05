@@ -1,13 +1,16 @@
 from datetime import datetime
 import os
 import uuid
+from pydub import AudioSegment
 from fastapi import APIRouter, Depends, Form, HTTPException, File, UploadFile, Query
 from datetime import timedelta
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Set, Union
 
 from sqlalchemy import and_
 from database import SessionLocal
 from starlette import status
+import librosa
+import soundfile as sf
 
 from models import Consultant, Customer, Conversation
 from schemas import SearchExistCustomer
@@ -31,15 +34,17 @@ def get_file_extension(filename: str) -> str:
 def upload(
     customer: int = Query(None, description="기존 고객 id"), 
     payload: Dict[str, Union[str, timedelta]] = Depends(get_current_user)
-    ) -> Dict[str, Union[str, Dict[str, str]]]:
+    ) -> Dict[str, Union[str, Dict[str, Optional[str]]]]:
 
     # (기존 고객) 상담 업로드 페이지
     if customer:
         db = SessionLocal()
+        consultant_id = db.query(Consultant).filter(Consultant.email == payload['sub']).first().id
         customer_data = db.query(
             Customer.name, Customer.phone, Customer.birthday, Customer.email, Customer.gender).filter(
-                Customer.id == customer
+                Customer.id == customer, Customer.consultant_id == consultant_id
             ).first()
+        customer_data = {"name": customer_data[0], "phone": customer_data[1], "birthday": customer_data[2], "email": customer_data[3], "gender": customer_data[4]}
         db.close()
         return {"message": "(기존 고객) 상담 업로드 페이지입니다.", "customer": customer_data}
     
