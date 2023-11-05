@@ -1,16 +1,13 @@
 from datetime import datetime
 import os
 import uuid
-from pydub import AudioSegment
 from fastapi import APIRouter, Depends, Form, HTTPException, File, UploadFile, Query
 from datetime import timedelta
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from sqlalchemy import and_
 from database import SessionLocal
 from starlette import status
-import librosa
-import soundfile as sf
 
 from models import Consultant, Customer, Conversation
 from schemas import SearchExistCustomer
@@ -172,17 +169,23 @@ def search_customer_page(
         if name and phone:
             # 이름 + 전화번호로 고객 검색
             customers_by_name_and_phone = db.query(Customer.id, Customer.name, Customer.phone).filter(and_(Customer.consultant_id == consultant_id, Customer.name == name, Customer.phone == phone)).all()
-            customers.extend(customers_by_name_and_phone)
+            for c in customers_by_name_and_phone:
+             temp = {"id":c[0], "name":c[1], "phone":c[2]}
+             customers.append(temp)
 
         elif name:
             # 이름으로 고객 검색
             customers_by_name = db.query(Customer.id, Customer.name, Customer.phone).filter(and_(Customer.consultant_id == consultant_id, Customer.name == name)).all()
-            customers.extend(customers_by_name)
+            for c in customers_by_name:
+             temp = {"id":c[0], "name":c[1], "phone":c[2]}
+             customers.append(temp)
 
         elif phone:
             # 전화번호로 고객 검색
             customers_by_phone = db.query(Customer.id, Customer.name, Customer.phone).filter(and_(Customer.consultant_id == consultant_id, Customer.phone == phone)).all()
-            customers.extend(customers_by_phone)
+            for c in customers_by_phone:
+             temp = {"id":c[0], "name":c[1], "phone":c[2]}
+             customers.append(temp)
         
         if len(customers) == 0:
             raise HTTPException(
@@ -209,7 +212,7 @@ def existing_customer_post(
     phone: str = Query(None, description="전화번호", max_length=11),
     selected: int = Query(None, description="선택된 고객"),
     payload: Dict[str, Union[str, timedelta]] = Depends(get_current_user)
-    ) -> Dict[str, Union[str, int]]:
+    ) -> Dict[str, Union[Optional[str], int]]:
 
     # 고객 리스트에서 고객 선택한 경우 -> 고객 id를 다음 페이지(GET /upload)로 전송
     if selected:
