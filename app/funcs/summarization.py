@@ -14,7 +14,6 @@ def summarize(input_text):
             else:
                 num = len(input_text)
             try_num += 1
-            print('###########','try_num','num')
             input_text = input_text[:num]
             input_ids = tokenizer.encode(input_text, return_tensors="pt")
             # Generate Summary Text Ids

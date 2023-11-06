@@ -57,4 +57,4 @@ def process_audio(path):
         data["timestamp"] = str(time(segment["start"]))
         data_list.append(data)
 
-    return data_list
+    return segments, data_list

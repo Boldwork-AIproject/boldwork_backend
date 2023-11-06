@@ -9,6 +9,7 @@ from funcs.summarization import summarize
 from funcs.get_words import GetWords
 from funcs.get_sentiment import speaker_seperation, get_sentiment_score
 from funcs.get_favorable_tone import favorable_tone
+from funcs.get_speech_participation import get_speech_participation_score
 from models import Conversation
 
 
@@ -34,7 +35,7 @@ def ai_analysis(
 
     # STT 음성 인식 결과
     raw_text = ''
-    data_list = process_audio(audio_file_path)
+    segments, data_list = process_audio(audio_file_path)
     
     # 발화 분리
     raw_text, speaker1_text, speaker2_text = speaker_seperation(data_list)
@@ -62,6 +63,8 @@ def ai_analysis(
     result['keywords'] = get_words.get_keywords()
     # 호의적인 태도 점수(백분율 0-1 사이)
     result['favorable_tone_score'] = favorable_tone(audio_file_path)
+    # 대화 참여도 점수
+    result['speech_participation_score'] = get_speech_participation_score(segments)
     # 필터링 키워드
     filter_keyword = get_words.get_filter_keywords()
 
