@@ -165,7 +165,8 @@ def one_conversation(
 
 
     # 해당 고객의 이전 상담 감성 점수
-    lately_conversation = db.query(Conversation.consultant_id, Conversation.creation_time, Conversation.raw_text).order_by(desc(Conversation.id)).all()[1:5]
+    present_customer_id = db.query(Conversation.customer_id).filter(Conversation.id == conversation_id).first()[0]
+    lately_conversation = db.query(Conversation.consultant_id, Conversation.creation_time, Conversation.raw_text).filter(Conversation.customer_id == present_customer_id).order_by(desc(Conversation.id)).all()[1:5]
     previous_sentiment = []
     for l in lately_conversation:
         temp = {}
