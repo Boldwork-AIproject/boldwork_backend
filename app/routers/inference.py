@@ -59,14 +59,14 @@ def ai_analysis(
     get_words = GetWords(raw_text)
     # 비속어 빈도
     result['badwords'] = get_words.get_badword_percentage()
-    # 등장 키워드 및 빈도
-    result['keywords'] = get_words.get_keywords()
     # 호의적인 태도 점수(백분율 0-1 사이)
     result['favorable_tone_score'] = favorable_tone(audio_file_path)
-    # 대화 참여도 점수
-    result['speech_participation_score'] = get_speech_participation_score(segments)
     # 필터링 키워드
     filter_keyword = get_words.get_filter_keywords()
+
+    get_words = GetWords(summary)
+    # 등장 키워드 및 빈도
+    result['keywords'] = get_words.get_keywords()
 
     # DB 저장
     db = SessionLocal()
