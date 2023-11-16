@@ -7,6 +7,7 @@ import re
 import nltk
 from collections import Counter
 from konlpy.tag import Kkma
+import csv
 
 
 # 현재 스크립트 파일의 디렉토리에서 'badwords.json' 파일을 읽기
@@ -40,10 +41,15 @@ class GetWords:
 
   # 상담 내용 키워드 구하기
   def get_keywords(self) -> List[Tuple[str, int]]:
+    # csv파일 리스트로 읽어오기
+    with open(f'{current_dir}/stopwords.csv', 'r', newline='') as f:
+        reader = csv.reader(f)
+        for stop_words in reader:
+            stopwords = stop_words
     ko = nltk.Text(self.input_noun, name = "상담 내용 키워드")
-    stop_words = ['안녕', '무엇', '시리얼', '선생님', '마죠', '하세', '기사', '기사원사', '원사', '로그', '은', '예']
-    ko = [each_word for each_word in ko if each_word not in stop_words]
+    ko = [each_word for each_word in ko if each_word not in stopwords]
     ko = [each_word for each_word in ko if len(each_word) != 1]
+    ko = [each_word for each_word in ko if not any(str.isdigit(e) for e in each_word)]
     ko = [each_word for each_word in ko if each_word not in badwords]
     data = Counter(ko).most_common(150)
     return data
